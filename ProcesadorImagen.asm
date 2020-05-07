@@ -10,9 +10,9 @@
 	#etiqueta principal
 	main: 
 		#se imprime el mensaje solicitando el ancho
-		li $v0, 51
-    		la $a0, ancho
-    		syscall
+		li $v0, 51 #llamado al sistema para abrir una ventana de dialogo 
+    		la $a0, ancho #se muestra el ancho
+    		syscall #llamado al sistema
 				
 		#se almacena el ancho en memoria
 		move $s0, $a0 #se mueve el número de $v0 a $s0
@@ -20,9 +20,9 @@
 		sw $s0, ($s1) #se almacena el ancho en la memoria
 		
 		#se imprime el mensaje solicitando el alto 
-		li $v0, 51
-    		la $a0, alto
-    		syscall
+		li $v0, 51 #llamado al sistema para abrir una ventana de dialogo 
+    		la $a0, alto #se muestra el alto
+    		syscall #llamado al sistema
 				
 		#se almacena el ancho en memoria
 		move $s0, $a0 #se mueve el número de $v0 a $s0
@@ -52,36 +52,35 @@
 		#se guarda el kernel de shaperned en memoria
 		jal Shaperned_kernel #salto a la etiqueta de shaperned
 		
-		jal OverShaperned_kernel
+		#se guarda el kernel de overshaperned en memoria
+		jal OverShaperned_kernel #salto a la etiqueta de overshaperned
+
+		#se abre y cierra el archivo de lectura
+		jal openRead_File #salto para abrir el archivo de lectura
+		jal closeFile #salto para cerrar el archivo de lectura
 		
-		
-		
-		jal openRead_File
-		jal closeFile
-		
+		#se abre el archivo de Shaperned
 		jal openShaperned_file	
+		
+		#se abre el archivo de Shaperned
 		jal openOverShaperned_file
 						
-		j imageProcessor
-	
+		j imageProcessor #se salta para iniciar el recorrido de la matriz de la imagen
+
+######################### ETIQUETAS PARA MOVERSE EN EL ARCHIVO Y OBTENER LA SUBMATRIZ DE LA IMAGEN #################################
 	#etiqueta donde se escoge cual es el procesamiento de la imagen segun el contador del ancho y el alto 
 	imageProcessor:
-		li $s1, 0x10000120
-		lw $s2, ($s1)
-		add $s2, $s2, 1
-		sw $s2, ($s1)
-		
 		li $s0, 0x10000000 #dirección de memoria donde está el valor del ancho
 		lw $s1, ($s0) #se obtiene el valor del ancho
 		
 		#cuando el contado del alto sea mayor q el alto
-		move $s2, $s0
-		add $s2, $s2, 4
-		lw $s3, ($s2)
-		add $s3, $s3, 1
-		add $s2, $s2, 8
-		lw $s4, ($s2)
-		beq $s3, $s4, end
+		move $s2, $s0 #se copia la dirección del valor del ancho
+		add $s2, $s2, 4 #se suma 4 a la dirección
+		lw $s3, ($s2) #se obtiene el valor del alto en la dirección (0x10000008)
+		add $s3, $s3, 1 #se suma 1 al valor del alto
+		add $s2, $s2, 8 #se suma 8 al valor contador del alto
+		lw $s4, ($s2) #se obtiene el valor del contador del alto en la dirección (0x10000010)
+		beq $s3, $s4, end #salta si la altura + 1 y el contador del alto son iguales
 				
 		#cuando el contador del ancho es igual a 1
 		add $s0, $s0, 8 #direccion de memoria donde está el valor del contador del ancho
@@ -94,7 +93,6 @@
 		
 		j differentWidth #salta si el contador del ancho es diferente de 1 o al ancho
 
-	
 	#etiqueta para el procesamiento cuando el contador del ancho es igual a 1
 	widthOne:
 		li $s0, 0x10000004 #dirección de memoria donde está el valor de la altura
@@ -111,7 +109,6 @@
 
 		j left #salta si el contador de la altura es diferente a 1 o a la altura
 
-	
 	#etiqueta para el procesamiento del pixel de la esquina arriba a la derecha
 	topLeftCorner:
 		li $s3, 0x10000060 #dirección en memoria para almacenar los números de de la imagen
@@ -162,10 +159,6 @@
     		jal getBinary #salto para obtener el número en la dirección de $s2
     		sw $t0, ($s3) #se guarda el número obtenido en la dirección 0x10000080		
     		 
-    		li $s1, 0x100000e0
-    		lw $s2, ($s1)
-    		add $s2, $s2, 1
-    		sw $s2, ($s1)
     		jal addWidth #salto para cambiar los contadores	
     		j convolution #salto para realizar la convolución
     		    			
@@ -228,11 +221,7 @@
 		li $s3, 0x10000080 #se carga en el registro la dirección 0x10000080
 		li $t0, 0 #al registro $t0 se le asigna un 0
 		sw $t0, ($s3) #se guarda un 0 en la dirección 0x10000080
-		
-		li $s1, 0x100000e4
-    		lw $s2, ($s1)
-    		add $s2, $s2, 1
-    		sw $s2, ($s1)								
+								
     		jal addWidth #salto para cambiar los contadores	
     		j convolution #salto para realizar la convolución
 		
@@ -300,11 +289,7 @@
     		li $s0, 8 #se le asigna a $s0 el contador de bits
     		jal getBinary #salto para obtener el número en la dirección de $s2
     		sw $t0, ($s3) #se guarda el número obtenido en la dirección 0x10000080 
-    		
-    		li $s1, 0x100000e8
-    		lw $s2, ($s1)
-    		add $s2, $s2, 1
-    		sw $s2, ($s1)
+
     		jal addWidth #salto para cambiar los contadores	
     		j convolution #salto para realizar la convolución	
     		 			
@@ -378,11 +363,7 @@
 		li $s3, 0x10000080 #se carga en el registro la dirección 0x10000080
 		li $t0, 0 #al registro $t0 se le asigna un 0
 		sw $t0, ($s3) #se guarda un 0 en la dirección 0x10000060				
-		
-		li $s1, 0x100000ec
-    		lw $s2, ($s1)
-    		add $s2, $s2, 1
-    		sw $s2, ($s1)						
+						
     		jal addHigh #salto para cambiar los contadores	
     		j convolution #salto para realizar la convolución
 	
@@ -441,11 +422,7 @@
 		li $s3, 0x10000080 #se carga en el registro la dirección 0x10000080
 		li $t0, 0 #al registro $t0 se le asigna un 0
 		sw $t0, ($s3) #se guarda un 0 en la dirección 0x10000080
-		
-		li $s1, 0x100000f0
-    		lw $s2, ($s1)
-    		add $s2, $s2, 1
-    		sw $s2, ($s1)																																				
+																																				
     		jal addHigh #salto para cambiar los contadores	
     		j convolution #salto para realizar la convolución
 		
@@ -459,7 +436,7 @@
     		lw $s2, ($s4) #se carga el ancho en el registro $s2
     		mul $s2, $s2, 8 #se multiplica por 8 el ancho
     		sub $s2, $s1, $s2 #se resta el contador de los pixeles con el ancho
-    		sub $s2, $s2, 8
+    		sub $s2, $s2, 8 #se le resta 8 al resultado anterior
     		li $s0, 8 #se le asigna a $s0 el contador de bits
     		jal getBinary #salto para obtener el número en la dirección de $s2
     		sw $t0, ($s3) #se guarda el número obtenido en la dirección 0x10000064 
@@ -497,7 +474,7 @@
     		lw $s2, ($s4) #se carga el ancho en el registro $s2
     		mul $s2, $s2, 8 #se multiplica por 8 el ancho
     		add $s2, $s1, $s2 #se resta el contador de los pixeles con el ancho
-    		sub $s2, $s2, 8
+    		sub $s2, $s2, 8 #se le resta 8 al resultado anterior
     		li $s0, 8 #se le asigna a $s0 el contador de bits
     		jal getBinary #salto para obtener el número en la dirección de $s2
     		sw $t0, ($s3) #se guarda el número obtenido en la dirección 0x100000 7c
@@ -513,11 +490,7 @@
     		li $s3, 0x10000080 #se carga en el registro la dirección 0x10000080
     		li $t0, 0 #al registro $t0 se le asigna un 0
 		sw $t0, ($s3) #se guarda un 0 en la dirección 0x10000078	
-    		
-    		li $s1, 0x100000f4
-    		lw $s2, ($s1)
-    		add $s2, $s2, 1
-    		sw $s2, ($s1)		
+  		
     		jal addHigh #salto para cambiar los contadores	
     		j convolution #salto para realizar la convolución
 	
@@ -598,11 +571,7 @@
     		li $s0, 8 #se le asigna a $s0 el contador de bits
     		jal getBinary #salto para obtener el número en la dirección de $s2
     		sw $t0, ($s3) #se guarda el número obtenido en la dirección 0x1000007c
-		
-		li $s1, 0x100000f8
-    		lw $s2, ($s1)
-    		add $s2, $s2, 1
-    		sw $s2, ($s1)																																				
+																																				
     		jal addWidth #salto para cambiar los contadores	
     		j convolution #salto para realizar la convolución
 		
@@ -667,11 +636,7 @@
 		
 		li $s3, 0x10000080 #se carga en el registro la dirección 0x10000080
 		sw $t0, ($s3) #se guarda un 0 en la dirección 0x10000068
-		
-		li $s1, 0x100000fc
-    		lw $s2, ($s1)
-    		add $s2, $s2, 1
-    		sw $s2, ($s1)
+
 		jal addWidth #salto para cambiar los contadores	
     		j convolution #salto para realizar la convolución
 	
@@ -753,20 +718,16 @@
     		jal getBinary #salto para obtener el número en la dirección de $s2
     		sw $t0, ($s3) #se guarda el número obtenido en la dirección 0x1000007c
 
-		li $s1, 0x10000100
-    		lw $s2, ($s1)
-    		add $s2, $s2, 1
-    		sw $s2, ($s1)
 		jal addWidth #salto para cambiar los contadores	
     		j convolution #salto para realizar la convolución
-		
+
+######################### ETIQUETAS PARA HACER LAS CONVOLUCIONES ###################################################################	
 	convolution:
-		li $s0, 0x10000018
-		lw $s1, ($s0)
-		li $s2, 1
-		#cuando la bandera es igual a 1
-		beq $s1, $s2, convolutionShaperned #salta si el contador de la altura es igual a la altura
-		j convolution_overShaperned
+		li $s0, 0x10000018 #dirección en memoria donde está la bandera
+		lw $s1, ($s0) #se caraga la bandera
+		li $s2, 1 #se asigna un 1 al registro $s2
+		beq $s1, $s2, convolutionShaperned #salta si la bandera es igual a 1
+		j convolution_overShaperned #salta cuando la bandera no es igual a 1
 		
 	#etiqueta para realizar la convolución entre la imagen y el kernel Shaperned
 	convolutionShaperned:
@@ -850,7 +811,7 @@
 		add $s0, $s0, 4 #se suma 4 a la dirección de los números
 		sub $s1, $s1, 4 #se suma 4 a la dirección del kernel
 		lw $s2, ($s0) #se carga el segundo número de la matriz de la imagen
-		lw $s3, ($s1)  #se carga el segundo número de la matriz del kernel
+		lw $s3, ($s1) #se carga el segundo número de la matriz del kernel
 		mul $s2, $s2, $s3  #se multiplica los dos números
 		add $s4, $s4, $s2 #se suma al resultado anterior
 		
@@ -858,7 +819,7 @@
 		add $s0, $s0, 4 #se suma 4 a la dirección de los números
 		sub $s1, $s1, 4 #se suma 4 a la dirección del kernel
 		lw $s2, ($s0) #se carga el tercer número de la matriz de la imagen
-		lw $s3, ($s1)  #se carga el tercer número de la matriz del kernel
+		lw $s3, ($s1) #se carga el tercer número de la matriz del kernel
 		mul $s2, $s2, $s3 #se multiplica los dos números
 		add $s4, $s4, $s2 #se suma al resultado anterior
 		
@@ -912,38 +873,40 @@
 		jal verifyNumber #salto a la etiquera que verifica si en número es menor que 0 o mayor que 255
 		jal begin_allocateMemory #salto a la etiqueta que guarda el número en el archivo
 
+######################### ETIQUETAS PARA AUMENTAR EL CONTADOR DE ALTO Y ANCHO ######################################################
 	addWidth:
 		li $s0, 0x10000000 #dirección en memoria donde esta el ancho
-		add $s0, $s0, 8
-    		lw $s1, ($s0)
-    		add $s1, $s1, 1
-    		sw $s1, ($s0)
+		add $s0, $s0, 8 #se suma 8 a la dirección del ancho
+    		lw $s1, ($s0) #se obtiene el contador del ancho (0x10000008)
+    		add $s1, $s1, 1 #se suma un 1 al contador del ancho
+    		sw $s1, ($s0) #se guarda el contador del ancho modificado
     		
-    		add $s0, $s0, 8
-    		lw $s1, ($s0)
-    		add $s1, $s1, 8
-    		sw $s1, ($s0)
+    		add $s0, $s0, 8 #se suma 8 a la direccion de memoria
+    		lw $s1, ($s0) #se obtiene el valor del contador de pixeles (0x10000010)
+    		add $s1, $s1, 8 #se suma un 8 al contador de pixeles
+    		sw $s1, ($s0) #se guarda el contador de pixeles
     		
     		jr $ra #salto a la siguiente dirección donde salto
 
 	addHigh:
 		li $s0, 0x10000000 #dirección en memoria donde esta el ancho
-		add $s0, $s0, 8
-    		li $s1, 1
-    		sw $s1, ($s0)
+		add $s0, $s0, 8 #se suma 8 a la dirección del ancho (0x10000008)
+    		li $s1, 1 #al registro $s1 se le asigna un 1
+    		sw $s1, ($s0) #se guarda el contador del ancho modificado
     		
-    		add $s0, $s0, 4
-    		lw $s1, ($s0)
-    		add $s1, $s1, 1
-    		sw $s1, ($s0)
+    		add $s0, $s0, 4 #se suma 4 a la dirección de memoria 
+    		lw $s1, ($s0) #se obtiene el valor del contador del alto (0x1000000c)
+    		add $s1, $s1, 1 #se suma un 1
+    		sw $s1, ($s0) #se guarda el valor del contador del alto
     		    		
-    		add $s0, $s0, 4
-    		lw $s1, ($s0)
-    		add $s1, $s1, 8
-    		sw $s1, ($s0)
+    		add $s0, $s0, 4 #se suma 8 a la direccion de memoria
+    		lw $s1, ($s0) #se obtiene el valor del contador de pixeles (0x10000010)
+    		add $s1, $s1, 8 #se suma un 8 al contador de pixeles
+    		sw $s1, ($s0) #se guarda el contador de pixeles
     		
     		jr $ra #salto a la siguiente dirección donde salto
-	
+
+######################### ETIQUETAS PARA VERIFICAR SI EL NÚMERO ES MENOR QUE 0 O MAYOR QUE 255 #####################################
 	#etiqueta que verifica si el número es mayor que 255 o menor q 0	
 	verifyNumber:
 		slti $s2, $s4, 0 #verifica si el número es menor que 0 ($s2=-1 si es menor, $s2=0 si es mayor)
@@ -951,7 +914,7 @@
 		slti $s2, $s4, 255 #verifica si el número es mayor que 255 ($s2=-1 si es menor, $s2=0 si es mayor)
 		beq $s2, 0, saveTop #si el número de la convolución es mayor que 255
 		li $s0, 0x10000014 #dirección en memoria que se guarda el número
-		sw $zero, ($s0)
+		#sw $zero, ($s0)
 		sw $s4, ($s0) #si el número no es mayor, ni menor se guarda el número
 		jr $ra #salto a la siguiente dirección donde salto
 	
@@ -959,7 +922,7 @@
 	saveZero:
 		li $s0, 0x10000014 #dirección en memoria que se guarda el número
 		li $s4, 0 #al registro $s4 se le asiga un 0
-		sw $zero, ($s0)
+		#sw $zero, ($s0)
 		sw $s4, ($s0) #se guarda el número
 		jr $ra #salto a la siguiente dirección donde salto
 	
@@ -967,10 +930,11 @@
 	saveTop:
 		li $s0, 0x10000014 #dirección en memoria que se guarda el número
 		li $s4, 255 #al registro $s4 se le asiga un 255
-		sw $zero, ($s0)
+		#sw $zero, ($s0)
 		sw $s4, ($s0) #se guarda el número
 		jr $ra #salto a la siguiente dirección donde salto
-	
+
+######################### ETIQUETAS OBTENER EL NÚMERO DEL ARCHIVO ##################################################################
 	#etiquta para obtener el número de 8 bits
 	getBinary:
 		beq $s0, 0, return #salto a la siguiente dirección donde salto
@@ -1017,13 +981,8 @@
 		add $s2, $s2, 1 #se suma un 1 para que avance al siguiente número
 		sub $s0, $s0, 1 #se resta un 1 al contador 
 		j getBinary #salto al loop donde se obtiene el siguente bit
-	
-	#etiqueta para obtener el número	
-	getNumber:
-		li $v0, 5 #llamado al sistema para leer el entero 
-		syscall #leer el entero en $v0 desde consola
-		jr $ra	#salto a la siguiente dirección donde salto
-	
+
+######################### ETIQUETAS PARA GUARDAR LOS KERNEL EN MEMORIA #############################################################
 	#etiqueta donde se almacena el kernel sharperned en memoria 
 	Shaperned_kernel:
 		li $s0, 0 #guardamos el número cero en el registro $s0
@@ -1055,7 +1014,8 @@
 		add $s1, $s1, 4 #se aumenta en 4 la dirección en memoria 0x10000050
 		sw $s0, ($s1) #se guarda en memoria el número 5
 		jr $ra	#salto a la siguiente dirección donde salto
-		
+
+######################### ETIQUETAS PARA SEPARAR EL NÚMERO EN EL HEAP ##############################################################
 	#etiqueta para asignar memoria en el heap
 	begin_allocateMemory:
 		li $s0, 0x100000a0 #dirección de memoria donde está en número de la convolución
@@ -1078,12 +1038,11 @@
 	
 	#etiqueta donde se selecciona en cual archivo guardar
 	saveFile:
-		li $t0, 0x10000018
-		lw $t1, ($t0)
-		li $t2, 1
-		#cuando la bandera es igual a 1
-		beq $t1, $t2, writeShaperned_file #salta si el contador de la altura es igual a la altura
-		j writeOver_shapernedFile
+		li $t0, 0x10000018 #dirección de memoria donde está la bandera
+		lw $t1, ($t0) #se carga la bandera en $t1
+		li $t2, 1 #se asigna un 1 al regitro t2
+		beq $t1, $t2, writeShaperned_file #salta si la bandera es igual a 1
+		j writeOver_shapernedFile #salta cuando la bandera no es igual a 1
 			
 	#etiqueta para verificar si el bit es un 0, un 1, o el inicio de la cadena
 	checkBit:
@@ -1126,6 +1085,38 @@
 		sub $s1, $s1, 1 #se le quita un 1 al la cantidad de espacios para moverse a la izquierda
 		j allocateMemory #salto al loop de guardar en memoria
 	
+######################### ETIQUETAS PARA ESCRIBIR EN LOS ARCHIVOS ##################################################################
+	#etiqueta donde escribe el archivo .bin de Shaperned
+    	writeShaperned_file:
+    		li $t2, 0x1000002c #dirección de memoria donde está el file descriptor del shaperned
+		lw   $s6, ($t2) #se obtiene el file descriptor
+		li   $v0, 15 #llamado al sistema para abrir el escribir
+		move $a0, $s6 #se copia el file descriptor
+		move $a1, $s0 #se copia el buffer de escritura en $a1
+		li   $a2, 8 #largo del buffer de escritura
+		syscall #llamado al sistema	
+		
+		li $s0, 0x10000018 #dirección de memoria donde está la bandera
+		li $s1, 2 #se asigna un 2 al regitro s1
+		sw $s1, ($s0) #se guarda en nuevo valor de la bandera	   		
+    		j convolution #salto para continuar con el filtro de overshaperned
+	
+	#etiqueta donde escribe el archivo .bin de overshaperned
+    	writeOver_shapernedFile:
+    		li $t2, 0x10000054 #dirección de memoria donde está el file descriptor del shaperned
+		lw   $s6, ($t2) #se obtiene el file descriptor
+		li   $v0, 15 #llamado al sistema para abrir el escribir
+		move $a0, $s6 #se copia el file descriptor
+		move $a1, $s0 #se copia el buffer de escritura en $a1
+		li   $a2, 8 #largo del buffer de escritura
+		syscall #llamado al sistema	
+		
+		li $s0, 0x10000018 #dirección de memoria donde está la bandera
+		li $s1, 1 #se asigna un 2 al regitro s1
+		sw $s1, ($s0) #se guarda en nuevo valor de la bandera
+    		j imageProcessor #se salta a la etiqueta para continuar con el siguiente número 
+
+######################### ETIQUETAS PARA ABRIR ARCHIVOS ############################################################################
 	#etiqueta donde se abre y leer el archivo .bin inicial
 	openRead_File:
 		#se abre el archivo a leer
@@ -1172,37 +1163,8 @@
 		sw   $s6, ($t2) ##se guarda el file descriptor en memoria
 		
 		jr $ra	#salto a la siguiente dirección donde salto
-	
-	#etiqueta donde escribe el archivo .bin de Shaperned
-    	writeShaperned_file:
-    		li $t2, 0x1000002c #dirección de memoria donde está el file descriptor del shaperned
-		lw   $s6, ($t2) #se obtiene el file descriptor
-		li   $v0, 15 #llamado al sistema para abrir el escribir
-		move $a0, $s6 #se copia el file descriptor
-		move $a1, $s0 #se copia el buffer de escritura en $a1
-		li   $a2, 8 #largo del buffer de escritura
-		syscall #llamado al sistema	
-		
-		li $s0, 0x10000018
-		li $s1, 2
-		sw $s1, ($s0)	   		
-    		j convolution
-	
-	#etiqueta donde escribe el archivo .bin de overshaperned
-    	writeOver_shapernedFile:
-    		li $t2, 0x10000054 #dirección de memoria donde está el file descriptor del shaperned
-		lw   $s6, ($t2) #se obtiene el file descriptor
-		li   $v0, 15 #llamado al sistema para abrir el escribir
-		move $a0, $s6 #se copia el file descriptor
-		move $a1, $s0 #se copia el buffer de escritura en $a1
-		li   $a2, 8 #largo del buffer de escritura
-		syscall #llamado al sistema	
-		
-		li $s0, 0x10000018
-		li $s1, 1
-		sw $s1, ($s0)
-    		j imageProcessor
-    		
+
+######################### ETIQUETAS PARA CERRAR ARCHIVOS ###########################################################################
     	#etiqueta para cerrar los archivos
 	closeFile:
 		li $v0, 16 #llamado al sistema para cerrar el archivo
@@ -1210,7 +1172,7 @@
     		syscall #llamado al sistema
     		jr $ra	#salto a la siguiente dirección donde salto
     	
-    #etiqueta para cerrar los archivos
+    	#etiqueta para cerrar los archivos
 	closeFile_shaperned:
 		li $t2, 0x1000002c #dirección de memoria donde está el file descriptor del shaperned
 		lw   $s6, ($t2) #se obtiene el file descriptor
@@ -1229,7 +1191,8 @@
     		syscall #llamado al sistema
     		
     		jr $ra	#salto a la siguiente dirección donde salto
-    		
+
+######################### ETIQUETA PARA CERRAR EL PROGRAMA #########################################################################	
 	#etiqueta para finalizar el programa		
 	end:
 		jal closeFile_shaperned #se cierra el archivo de shaperned
